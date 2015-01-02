@@ -1,0 +1,28 @@
+---
+- name: create znc group
+  group: state=present name=znc system=yes
+
+- name: create znc user
+  user: state=present name=znc system=yes group=znc
+
+- name: create data dir
+  file: path=/var/lib/znc state=directory owner=znc group=znc
+
+- name: create dedicated dirs
+  file: path=/var/lib/znc/{{item}} state=directory owner=znc group=znc
+  with_items:
+    - configs
+    - moddata
+    - users
+    - modules
+
+- name: copy init
+  copy: src=znc_init.sh dest=/etc/init.d/znc mode=0755
+
+- name: install init
+  shell: update-rc.d znc defaults
+
+- name: copy znc.conf
+  copy: src=znc.conf dest=/var/lib/znc/configs/znc.conf
+    mode=0600 owner=znc group=znc
+  notify: restart znc service
